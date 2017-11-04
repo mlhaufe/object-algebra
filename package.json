@@ -1,0 +1,26 @@
+{
+  "name": "object-algebra",
+  "version": "1.0.0",
+  "description": "",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "prepublish": "npm run build",
+    "build": "tsc",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mlhaufe/object-algebra.git"
+  },
+  "keywords": [],
+  "author": "Michael Haufe",
+  "license": "UNLICENSED",
+  "bugs": {
+    "url": "https://github.com/mlhaufe/object-algebra/issues"
+  },
+  "homepage": "https://github.com/mlhaufe/object-algebra#readme",
+  "devDependencies": {
+    "typescript": "^2.6.1"
+  }
+}
