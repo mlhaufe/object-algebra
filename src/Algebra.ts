@@ -1,16 +1,39 @@
 import App from "./hkt/App"
-import Id from "./hkt/Id"
 import Lifter from "./Lifter"
 import LiftDecorate from "./LiftDecorate"
 
-function _fnEmpty(){ return Object.create(null) }
+const _fnEmpty = {
+    enumerable:true,
+    value: () => Object.create(null)
+}
 
-abstract class Algebra<F> implements App<'Algebra',F> {
-    static prj<A>(app: App<'Algebra',A>): Algebra<A> { return <Algebra<A>>app };
+/**
+ * An Object Algebra consists of a set of related methods (a Family) that return
+ * an instance of the provided Generic Type parameter. 
+ * 
+ * By convention, Constructors are denoted with PascalCase and operations
+ * are denoted with camelCase
+ * 
+ * The Type Constructor Polymorphism workaround is included. 
+ * Instead of every method returning the generic parameter C, instead the
+ * super-type is returned: App<C,T>
+ */
+abstract class Algebra<C> {
+    //TODO: Test Types
+    static empty<C,T>(algebra: App<C,T>): App<C,any> {
+        var emptyAlg = Object.create(null)
+        Object.keys(this).forEach(key => Object.defineProperty(emptyAlg,key,_fnEmpty));
+        return emptyAlg
+    }
 
-    [Variant: string]: <T>(...args: any[]) => App<F,T>
+    /**
+     * C is a subtype of App<C,T>
+     */
+    readonly [Variant: string]: <T>(...args: any[]) => App<C,T>
 
-    merge<A,B>(lifter: Lifter<A,B>, a: App<F,A>, b: App<F,B>): App<F, A & B> {
+
+/*
+    merge<A,B>(lifter: Lifter<A,B>, a: F<A>, b: F<B>): F<A & B> {
         var merged = Object.create(null)
         Object.keys(this)
         .forEach(key => {
@@ -28,45 +51,13 @@ abstract class Algebra<F> implements App<'Algebra',F> {
                 })
             }
         });
-        //TODO
+
         return merged
     }
-    empty(): App<F,any> {
-        var emptyAlg = Object.create(null)
-        Object.keys(this)
-            .forEach(key => {
-                if(key == 'merge' || key == 'empty' || key == 'decorate') {
-                    emptyAlg[key] == this[key]
-                } else {
-                    Object.defineProperty(emptyAlg,key,{enumerable:true,value:_fnEmpty})
-                }
-            });
-        return emptyAlg
-    }
-    decorate<A>(parent: App<F,A>, action: (a:A) => A): App<F, A> {
+    decorate<A>(parent: F<A>, action: (a:A) => A): F<A> {
         return this.merge(new LiftDecorate(action),parent,this.empty())
     }
-}
-
-////////////////////
-
-abstract class BoolAlgebra<V> extends Algebra<V> {
-    abstract False(): V
-    abstract True(): V
-}
-
-class BoolFactory extends BoolAlgebra<boolean> {
-    False(): boolean { return false }
-    True(): boolean { return true }
-}
-const boolFactory = new BoolFactory()
-
-boolFactory.empty()
-
-interface IPrintable{ print(): string }
-class IPrintable extends BoolAlgebra<IPrintable> {
-    False(): IPrintable { return {print: () => 'false' } }
-    True(): IPrintable { return {print: () => 'true' } }
+    */
 }
 
 export default Algebra
