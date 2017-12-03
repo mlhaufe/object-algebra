@@ -6,6 +6,7 @@ import App from "./App"
  * Example:
  * 
  * List<number> is represented as Id<List<number>>
+ * boolean is represented as Id<boolean>
  */
 class Id<T> implements App<'Id',T> {
     constructor(readonly value: T){}
