@@ -13,16 +13,21 @@ export default {
     },
     mode: 'production',
     module: {
-        rules: [{ test: /\.mts$/, use: 'ts-loader' }]
+        rules: [
+            { test: /\.m?ts$/, use: 'ts-loader', exclude: /node_modules/ }
+        ]
     },
     resolve: {
-        extensions: ['.mts', '.mjs', '.js', '.ts', '.json']
+        extensions: ['.mts', '.mjs', '.js', '.ts', '.json'],
+        extensionAlias: {
+            ".js": [".js", ".ts"],
+            ".cjs": [".cjs", ".cts"],
+            ".mjs": [".mjs", ".mts"]
+        }
     },
     output: {
         clean: true,
-        library: {
-            type: 'module'
-        },
+        library: { type: 'module' },
         module: true,
         filename: 'index.mjs',
         path: path.resolve(__dirname, 'dist'),

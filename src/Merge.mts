@@ -1,8 +1,7 @@
 import { Algebra } from "./Algebra.mjs";
+import { Constructor } from "./Constructor.mjs";
 import { fnEmpty } from "./fnEmpty.mjs"
 import { getAllPropertyDescriptors } from "./getAllPropertyDescriptors.mjs";
-
-export type Constructor<T> = new (...args: any[]) => T
 
 // ZipIntersect<[A, B, C], [X, Y, Z]> = [A & X, B & Y, C & Z]
 type ZipIntersect<T extends readonly any[], U extends readonly any[]> = {
@@ -39,32 +38,34 @@ type UnCons<CS extends Constructor<any>[]> = {
  * Merge multiple Algebras into a single Algebra
  */
 export function Merge<CS extends Constructor<Algebra>[]>(...constructors: CS): Constructor<MergeAlgebras<UnCons<CS>>> {
-    return class {
-        static {
-            for (let Con of constructors) {
-                //const descs = Object.getOwnPropertyDescriptors(Con.prototype)
-                const descs = getAllPropertyDescriptors(Con.prototype)
-                for (let [name, desc] of Object.entries(descs)) {
-                    if (name === 'constructor') continue
-                    const currMethod = Object.getOwnPropertyDescriptor(this.prototype, name)?.value ?? fnEmpty,
-                        descMethod = desc.value ?? fnEmpty
-                    Object.defineProperty(this.prototype, name, {
-                        writable: true,
-                        value(...args: any[]) {
-                            return Object.assign(
-                                currMethod.apply(this, args),
-                                descMethod.apply(this, args)
-                            )
-                        }
-                    })
-                }
-            }
-        }
 
+    class MergedAlgebra {
         constructor(...args: any[]) {
             constructors.forEach((C) =>
                 Object.assign(this, Reflect.construct(C, args, this.constructor))
             )
         }
-    } as any
+    }
+
+    const proto = MergedAlgebra.prototype
+
+    for (let Con of constructors) {
+        const descs = getAllPropertyDescriptors(Con.prototype)
+        for (let [name, desc] of Object.entries(descs)) {
+            if (name === 'constructor') continue
+            const currMethod = Object.getOwnPropertyDescriptor(proto, name)?.value ?? fnEmpty,
+                descMethod = desc.value ?? fnEmpty
+            Object.defineProperty(proto, name, {
+                writable: true,
+                value(...args: any[]) {
+                    return Object.assign(
+                        currMethod.apply(proto, args),
+                        descMethod.apply(proto, args)
+                    )
+                }
+            })
+        }
+    }
+
+    return MergedAlgebra as any
 }
