@@ -1,9 +1,25 @@
 export default {
-    transform: {},
     moduleFileExtensions: [
-        "mjs",
-        // must include "js" to pass validation https://github.com/facebook/jest/issues/12116
-        "js",
+        'js',
+        'mjs',
+        'mts'
     ],
-    testRegex: `^.+.test\.mjs$`
+    moduleNameMapper: {
+        '^(\\.\\.?/.*)\\.mjs$': [
+            '$1.mts',
+            '$0'
+        ]
+    },
+    reporters: [
+        'default',
+        ['jest-junit', { outputDirectory: './coverage' }]
+    ],
+    testEnvironment: 'node',
+    testMatch: [
+        '**/__tests__/**/*.m[jt]s?(x)',
+        '**/?(*.)+(spec|test).m[tj]s?(x)'
+    ],
+    transform: {
+        '^.+\\.mts$': ['ts-jest', { useESM: true }]
+    }
 };

@@ -48,7 +48,7 @@ describe('PeanoAlg', () => {
     }
 
     test('Peano', () => {
-        class Peano extends Merge(PeanoFactory, ToNumber, Addable) { }
+        const Peano = Merge(PeanoFactory, ToNumber, Addable)
 
         const peano = new Peano()
 

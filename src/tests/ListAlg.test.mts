@@ -1,45 +1,47 @@
+import { Algebra } from "../Algebra.mjs"
 import { Merge } from "../Merge.mjs"
 
 describe('ListAlg', () => {
-    class ListData { }
-    class Nil extends ListData { }
-    class Cons extends ListData {
-        constructor(head, tail) {
-            super()
-            this.head = head
-            this.tail = tail
-        }
+    // TODO: need to find a convenient way to represent Higher Kinded Types
+    // See TypeScript issue <https://github.com/microsoft/TypeScript/issues/1213>
+    interface ListAlg<T> extends Algebra {
+        Nil(): T
+        Cons(head: any, tail: T): T
     }
 
-    class ListFactory {
-        Nil() {
+    abstract class ListData<T> { }
+    class Nil<T> extends ListData<T> { }
+    class Cons<T> extends ListData<T> {
+        constructor(readonly head: any, readonly tail: ListData<T>) { super() }
+    }
+
+    class ListFactory<T> implements ListAlg<ListData<T>> {
+        Nil(): Nil<T> {
             return new Nil()
         }
-        Cons(head, tail) {
+        Cons(head: any, tail: ListData<T>): Cons<T> {
             return new Cons(head, tail)
         }
     }
 
-    class Lengthable {
-        Nil() {
-            return {
-                length() { return 0 }
-            }
+    interface ILengthable { length(): number }
+    class Lengthable implements ListAlg<ILengthable> {
+        Nil(): ILengthable {
+            return { length() { return 0 } }
         }
-        Cons(head, tail) {
-            return {
-                length() { return 1 + tail.length() }
-            }
+        Cons(head: any, tail: ILengthable) {
+            return { length() { return 1 + tail.length() } }
         }
     }
 
-    class Concatable {
-        Nil() {
+    interface IConcatable { concat(other: IConcatable): this }
+    class Concatable implements ListAlg<IConcatable> {
+        Nil(): IConcatable {
             return {
                 concat(other) { return other }
             }
         }
-        Cons(head, tail) {
+        Cons(head: any, tail: IConcatable): IConcatable {
             const family = this
             return {
                 concat(other) { return family.Cons(head, tail.concat(other)) }
@@ -50,13 +52,13 @@ describe('ListAlg', () => {
     test('Merge', () => {
         class List extends Merge(ListFactory, Lengthable, Concatable) { }
 
-        const list = /** @type {any} */ (new List())
+        const { Nil, Cons } = new List()
 
-        const xs = list.Cons(1, list.Cons(2, list.Cons(3, list.Nil())))
+        const xs = Cons(1, Cons(2, Cons(3, Nil())))
 
         expect(xs.length()).toBe(3)
 
-        const ys = list.Cons(4, list.Cons(5, list.Cons(6, list.Nil())))
+        const ys = Cons(4, Cons(5, Cons(6, Nil())))
         const zs = xs.concat(ys)
 
         expect(zs.length()).toBe(6)

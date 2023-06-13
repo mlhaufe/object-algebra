@@ -15,7 +15,7 @@ describe('Point', () => {
         constructor(readonly x: number, readonly y: number, readonly z: number) { super() }
     }
 
-    class PointFactory implements PointAlg<PointData> {
+    class PointDataFactory implements PointAlg<PointData> {
         Point2(x: number, y: number) {
             return new Point2(x, y)
         }
@@ -55,24 +55,41 @@ describe('Point', () => {
     }
 
     test('Merge', () => {
-        class Point extends Merge(PointFactory, Printable, Addable) { }
+        class PointFactory extends Merge(PointDataFactory, Printable, Addable) { }
 
-        const point = new Point()
+        const { Point2, Point3 } = new PointFactory()
 
-        const p1 = point.Point2(1, 2)
+        const p1 = Point2(1, 2)
         expect(p1.x).toBe(1)
         expect(p1.y).toBe(2)
         expect(p1.print()).toBe('(1, 2)')
 
-        const p2 = point.Point3(1, 2, 3)
-        expect(p2.x).toBe(1)
-        expect(p2.y).toBe(2)
-        expect(p2.z).toBe(3)
-        expect(p2.print()).toBe('(1, 2, 3)')
+        const p2 = Point2(3, 4)
+        expect(p2.x).toBe(3)
+        expect(p2.y).toBe(4)
+        expect(p2.print()).toBe('(3, 4)')
 
         const p3 = p1.add(p2)
-        expect(p3.x).toBe(2)
-        expect(p3.y).toBe(4)
-        expect(p3.print()).toBe('(2, 4)')
+        expect(p3.x).toBe(4)
+        expect(p3.y).toBe(6)
+        expect(p3.print()).toBe('(4, 6)')
+
+        const p4 = Point3(1, 2, 3)
+        expect(p4.x).toBe(1)
+        expect(p4.y).toBe(2)
+        expect(p4.z).toBe(3)
+        expect(p4.print()).toBe('(1, 2, 3)')
+
+        const p5 = Point3(4, 5, 6)
+        expect(p5.x).toBe(4)
+        expect(p5.y).toBe(5)
+        expect(p5.z).toBe(6)
+        expect(p5.print()).toBe('(4, 5, 6)')
+
+        const p6 = p4.add(p5)
+        expect(p6.x).toBe(5)
+        expect(p6.y).toBe(7)
+        expect(p6.z).toBe(9)
+        expect(p6.print()).toBe('(5, 7, 9)')
     })
 })

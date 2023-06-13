@@ -39,34 +39,36 @@ For direct use in a browser (no build step):
 
 ## Usage
 
+Declare the Algebra:
+
+```ts
+interface PointAlg<T> extends Algebra {
+    Point2(x: number, y: number): T
+    Point3(x: number, y: number, z: number): T
+}
+```
+
 Define Data:
 
 ```js
-class ExpData { }
-class Lit extends ExpData {
-    constructor(value) {
-        super()
-        this.value = value
-    }
+class PointData { }
+class Point2 extends PointData {
+    constructor(readonly x: number, readonly y: number) { super() }
 }
-class Add extends ExpData {
-    constructor(left, right) {
-        super()
-        this.left = left
-        this.right = right
-    }
+class Point3 extends PointData {
+    constructor(readonly x: number, readonly y: number, readonly z: number) { super() }
 }
 ```
 
 Define Factory for the data:
 
 ```js
-class ExpFactory {
-    Lit(value) {
-        return new Lit(value)
+class PointDataFactory implements PointAlg<PointData> {
+    Point2(x: number, y: number) {
+        return new Point2(x, y)
     }
-    Add(left, right) {
-        return new Add(left, right)
+    Point3(x: number, y: number, z: number) {
+        return new Point3(x, y, z)
     }
 }
 ```
@@ -74,29 +76,33 @@ class ExpFactory {
 Define a couple traits:
 
 ```js
-class Printable {
-    Lit(value) {
+interface IPrintable { print(): string }
+class Printable implements PointAlg<IPrintable> {
+    Point2(x: number, y: number): IPrintable {
         return {
-            print() { return `${value}` }
+            print() { return `(${x}, ${y})` }
         }
     }
-    Add(left, right) {
+    Point3(x: number, y: number, z: number): IPrintable {
         return {
-            print() { return `${left.print()} + ${right.print()}` }
+            print() { return `(${x}, ${y}, ${z})` }
         }
     }
 }
 
-class Evaluable {
-    Lit(value) {
+interface IAddable { add(other: PointData & IAddable): this }
+class Addable implements PointAlg<IAddable & PointData> {
+    Point2(x: number, y: number): IAddable & Point2 {
+        const family = this
         return {
-            evaluate() { return value }
-        }
+            add(other: Point2 & IAddable) { return family.Point2(x + other.x, y + other.y) }
+        } as any
     }
-    Add(left, right) {
+    Point3(x: number, y: number, z: number): IAddable & Point3 {
+        const family = this
         return {
-            evaluate() { return left.evaluate() + right.evaluate() }
-        }
+            add(other: Point3 & IAddable) { return family.Point3(x + other.x, y + other.y, z + other.z) }
+        } as any
     }
 }
 ```
@@ -106,17 +112,35 @@ Compose the features into a single class:
 ```js
 import {Merge} from '@mlhaufe/object-algebra';
 
-class Exp extends Merge(ExpFactory, Printable, Evaluable) { }
+class PointFactory extends Merge(PointDataFactory, Printable, Addable) { }
 
-const exp = new Exp()
+// Alternatively:
+// const PointFactory = Merge(PointDataFactory, Printable, Addable)
 
-const expr = exp.Add(exp.Lit(1), exp.Lit(2))
+const { Point2, Point3 } = new PointFactory()
 
-console.log(expr.print()) // 1 + 2
-console.log(expr.evaluate()) // 3
+const p1 = Point2(1, 2)
+const p2 = Point2(3, 4)
+
+console.log(p1.print()) // (1, 2)
+console.log(p2.print()) // (3, 4)
+
+console.log(p1.add(p2).print()) // '(4, 6)'
 ```
 
 More examples are available in the [tests](./src/tests/) directory.
+
+## Future Work
+
+TypeScript does not support Higher Kinded Types ([#1213](<https://github.com/microsoft/TypeScript/issues/1213>)).
+This means that the `Merge` function will not track or merge the generics types of the composed classes.
+This is generally a problem for container types like `List`. You can see an example of in
+[ListAlg.test.mts](./src/tests/ListAlg.test.mts) directory.
+
+TypeScript also does not support associated types ([#17588](https://github.com/microsoft/TypeScript/issues/17588))
+so an emulation of HKTs are also not possible via that feature (As [described](https://dl.acm.org/doi/pdf/10.1145/28697.28738) by Bertrand Meyer). Index types are close, but seem to be forgotten by the compiler.
+
+There is [another approach](https://gcanti.github.io/fp-ts/modules/HKT.ts.html) to HKTs that does leverage indexed types to some limited success, but it adds an additional syntactic burden to the user which I find unacceptable.
 
 ## References and Further Reading
 
