@@ -1,6 +1,6 @@
 {
     "name": "@mlhaufe/object-algebra",
-    "version": "0.0.1",
+    "version": "0.1.1",
     "description": "An implementation of Object Algebras",
     "keywords": [
         "Object Algebra",
